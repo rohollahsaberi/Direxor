@@ -11,48 +11,131 @@
     <Page.DataContext>
         <vm:ChatVM/>
     </Page.DataContext>
-    
+
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="10*"/>
         </Grid.ColumnDefinitions>
-        <RefreshContainer x:Name="RefreshContainer">
-            <ListView ItemsSource="{Binding Media}" Grid.Column="0" SelectionMode="Single" Name="lvMedia">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid  VerticalAlignment="Bottom" Height="47" Margin="0 0 0 11">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="&#xE700;" VerticalAlignment="Center" Margin="31 0 11 0" FontSize="23" FontFamily="Segoe MDL2 Assets" />
+                <TextBox PlaceholderText="Search..." Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="7" BorderThickness="0" Background="#F1F1F1" Foreground="#999999" VerticalContentAlignment="Center"/>
+            </Grid>
+            <ListView Grid.Row="1" ItemsSource="{Binding Media}" Grid.Column="0" SelectionMode="Single" Name="lvMedia">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Height="44" Width="44" Margin="4 7">
+                            <Ellipse Height="44" Width="44" Margin="7">
                                 <Ellipse.Fill>
-                                    <ImageBrush ImageSource="{Binding Images[0].Uri}"/>
+                                    <ImageBrush ImageSource="{Binding Images[0].Uri}" Stretch="UniformToFill"/>
                                 </Ellipse.Fill>
                             </Ellipse>
                             <StackPanel Margin="4" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding LikesCount}" Opacity=".7"/>
-                                <TextBlock Text="{Binding Caption.Text}" MaxLines="1" Opacity=".5"/>
+                                <TextBlock Text="{Binding Caption.Text}" MaxLines="1" Opacity=".5" ToolTipService.ToolTip="{Binding Caption.Text}"/>
                             </StackPanel>
                         </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-        </RefreshContainer>
+        </Grid>
+
 
         <Border BorderThickness="0 0 1 0" BorderBrush="Black" Opacity=".1"/>
-        <ListView ItemsSource="{Binding Chat}" Grid.Column="1">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel Orientation="Horizontal" Margin="7">
-                        <Ellipse Height="44" Width="44" VerticalAlignment="Top" Margin="4 0">
-                            <Ellipse.Fill>
-                                <ImageBrush ImageSource="{Binding User.ProfilePicUrl}"/>
-                            </Ellipse.Fill>
-                        </Ellipse>
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <ListView ItemsSource="{Binding Chat}" Grid.Column="1" SelectionMode="None">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                        <TextBlock Text="{Binding Text}" VerticalAlignment="Center"/>
+                            <Grid Margin="7">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Ellipse Height="34" Width="34" VerticalAlignment="Top" Margin="4 0">
+                                    <Ellipse.Fill>
+                                        <ImageBrush ImageSource="{Binding UserProfile}" Stretch="UniformToFill"/>
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <TextBlock Text="{Binding Text}" VerticalAlignment="Center" Grid.Column="1" MaxWidth="500" TextAlignment="Justify" TextWrapping="Wrap"/>
+                            </Grid>
+
+                            <ListView ItemsSource="{Binding reChats}"  Grid.Row="1" Margin="100 0 0 0" HorizontalAlignment="Right" SelectionMode="None">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Ellipse Height="24" Width="24" VerticalAlignment="Top" Margin="4 0">
+                                                <Ellipse.Fill>
+                                                    <ImageBrush ImageSource="{Binding UserProfile}" Stretch="UniformToFill"/>
+                                                </Ellipse.Fill>
+                                            </Ellipse>
+                                            <RelativePanel Grid.Column="1">
+                                                <TextBlock x:Name="tbText" Text="{Binding Text}" MaxWidth="300" TextAlignment="Justify" TextWrapping="Wrap"/>
+                                                <Button x:Name="btnReplay" Content="reply" Tag="{Binding PK}" RelativePanel.RightOf="tbText"  CommandParameter="{Binding ReChat}" Background="Transparent" VerticalAlignment="Top" Click="BtnReplay_Click"/>
+                                            </RelativePanel>
+                                            <StackPanel/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+
+            </ListView>
+
+            <Grid Grid.Row="1" VerticalAlignment="Bottom">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="47"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid Height="47" x:Name="grReply"  Grid.ColumnSpan="4" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="&#xE7A7;" VerticalAlignment="Center" Margin="24 0" FontSize="13" Opacity=".5"  FontFamily="Segoe MDL2 Assets" Grid.Row="1"/>
+                    <StackPanel Orientation="Vertical" Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock x:Name="tbUsername" Text="ra.sad" Foreground="Black" Opacity=".3" FontSize="15"/>
+                        <TextBlock x:Name="tbParentText" Grid.Column="1" VerticalAlignment="Center" Opacity=".5" MaxLines="1"/>
                     </StackPanel>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-            
-        </ListView>
+                </Grid>
+                
+                <Border BorderBrush="Gray" BorderThickness="0 1 0 0" Grid.ColumnSpan="5" Opacity=".3" HorizontalAlignment="Stretch"/>
+                <TextBlock Text="&#xE16C;" VerticalAlignment="Center" Margin="14 0" FontSize="23" Opacity=".5"  FontFamily="Segoe MDL2 Assets" Grid.Row="1"/>
+                <TextBox x:Name="tbMesssage" AcceptsReturn="True" BorderThickness="0" PlaceholderText="message" PlaceholderForeground="Gray" VerticalAlignment="Center" Grid.Column="1" TextAlignment="Justify" TextWrapping="Wrap" Grid.Row="1"/>
+                <Button x:Name="btnSend" Content="&#xE761;" FontFamily="Segoe MDL2 Assets" FontSize="23" Grid.Column="2" Margin="7 0" Background="Transparent" Click="BtnSend_Click" Grid.Row="1"/>
+            </Grid>
+        </Grid>
+       
+        
     </Grid>
 </Page>

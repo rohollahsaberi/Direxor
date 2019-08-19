@@ -11,19 +11,22 @@ using System.Threading.Tasks;
 using Microsoft.Toolkit.Uwp;
 using Microsoft.Toolkit.Collections;
 using System.Threading;
+using Direxor.Model;
 
 namespace Direxor.VM
 {
     public class ChatVM : BaseViewModel
     {
-        //private ObservableCollection<ProjectShowModel> _items;
-        //public ObservableCollection<ProjectShowModel> Items { get => _items; set { _items = value; OnPropertyChanged("Items"); } }
+        public static event EventHandler SendCommentResult;
+        public static event EventHandler SendReCommentResult;
 
         private IncrementalLoadingCollection<MediaSource, InstaMedia> _media;
         public IncrementalLoadingCollection<MediaSource, InstaMedia> Media { get => _media; set { _media = value; OnPropertyChanged("Media"); } }
 
-        private ObservableCollection<InstaComment> _chats;
-        public ObservableCollection<InstaComment> Chat { get => _chats; set { _chats = value; OnPropertyChanged("Chat"); } }
+        private ObservableCollection<ChatModel> _chats;
+        public ObservableCollection<ChatModel> Chat { get => _chats; set { _chats = value; OnPropertyChanged("Chat"); } }
+
+
 
         private string _status;
 
@@ -33,12 +36,28 @@ namespace Direxor.VM
         public ChatVM()
         {
             ChatPage.MediaChanged += ChatPage_MediaChanged;
+            ChatPage.SendComment += ChatPage_SendComment;
+            ChatPage.SendReplay += ChatPage_SendReplay;
             _status = "Loading data";
             //Create API
             new Classes.Ins().SetApi();
             Media = new IncrementalLoadingCollection<MediaSource, InstaMedia>();
 
             //GetMedia();
+        }
+
+        private async void ChatPage_SendReplay(object sender, EventArgs e)
+        {
+            var m = e as EventMessage;
+            var send = await new Commenter().SendReComment(m.ID, m.cmID.ToString(), m.Text);
+            SendReCommentResult(this, new EventSendResult { ID = m.ID, Result = send });
+        }
+
+        private async void ChatPage_SendComment(object sender, EventArgs e)
+        {
+            var m = e as EventMessage;
+            var send = await new Commenter().SendComment(m.ID, m.Text);
+            SendCommentResult(this, new EventSendResult { ID = m.ID, Result = send });
         }
 
         private void ChatPage_MediaChanged(object sender, EventArgs e)
@@ -50,11 +69,53 @@ namespace Direxor.VM
         private async void GetComment(string pk)
         {
             var coms = await Ins.APi.CommentProcessor.GetMediaCommentsAsync(pk, PaginationParameters.Empty);
-            Chat = new ObservableCollection<InstaComment>();
+            Chat = new ObservableCollection<ChatModel>();
             foreach (var c in coms.Value.Comments)
             {
-                Chat.Add(c);
+                Chat.Add(new ChatModel
+                {
+                    CreatedAt = c.CreatedAt,
+                    HasLikedComment = c.HasLikedComment,
+                    LikeCount = c.LikesCount,
+                    PK = c.Pk,
+                    Text = c.Text,
+                    UserFullName = c.User.FullName,
+                    Username = c.User.UserName,
+                    UserProfile = c.User.ProfilePicUrl,
+                    UserPk = c.User.Pk,
+                    reChats = await GetReComment(pk, c.Pk.ToString())
+                });
             }
+        }
+
+        private async Task<List<ReChatModel>> GetReComment(string pk, string v)
+        {
+            List<ReChatModel> reChats = new List<ReChatModel>();
+            var recoms = await Ins.APi.CommentProcessor.GetMediaRepliesCommentsAsync(pk, v, PaginationParameters.Empty);
+            foreach (var r in recoms.Value.ChildComments)
+            {
+                reChats.Add(new ReChatModel
+                {
+                    CreatedAt = r.CreatedAt,
+                    HasLikedComment = r.HasLikedComment,
+                    LikeCount = r.LikesCount,
+                    ParentPk = pk,
+                    Text = r.Text,
+                    PK = r.Pk,
+                    UserFullName = r.User.FullName,
+                    Username = r.User.UserName,
+                    UserPk = r.User.Pk,
+                    UserProfile = r.User.ProfilePicUrl,
+                    ReChat = new ReChatContiner
+                    {
+                        PK = r.Pk,
+                        Text = r.Text,
+                        Username = r.User.UserName,
+                        UserPk = r.User.Pk
+                    }
+                });
+            }
+            return reChats;
         }
 
         //private async void GetMedia()
@@ -103,5 +164,6 @@ namespace Direxor.VM
                 return null;
         }
     }
+
 
 }
